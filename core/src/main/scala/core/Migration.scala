@@ -211,9 +211,9 @@ class Migration extends SparkListener {
       else if (destinationMap("platform") == "hive") {
         dataframeFromTo.dataFrameToHive(destinationMap("table"), destinationMap.getOrElse("savemode", "Append"), dft)
       } else if (destinationMap("platform") == "mongodb") {
-        dataframeFromTo.dataFrameToMongodb(destinationMap("awsenv"), destinationMap("cluster"), destinationMap("database"), destinationMap("authenticationdatabase"), destinationMap("collection"), destinationMap("login"), destinationMap("password"), destinationMap.getOrElse("replicaset", null), destinationMap.getOrElse("replacedocuments", "true"), destinationMap.getOrElse("orderedrecords", "false"), dft, sparkSession, destinationMap.getOrElse("documentfromjsonfield", "false"), destinationMap.getOrElse("jsonfield", "jsonfield"), destinationMap("vaultenv"), destinationMap.getOrElse("secretstore", "vault"), destination.optJSONObject("sparkoptions"), destinationMap.get("maxBatchSize").getOrElse(null), destinationMap.getOrElse("authenticationenabled", true).asInstanceOf[Boolean])
+        dataframeFromTo.dataFrameToMongodb(awsEnv = destinationMap("awsenv"), cluster = destinationMap("cluster"), database = destinationMap("database"), authenticationDatabase = destinationMap("authenticationdatabase"), collection = destinationMap("collection"), login = destinationMap("login"), password = destinationMap("password"), replicaset = destinationMap.getOrElse("replicaset", null), replaceDocuments = destinationMap.getOrElse("replacedocuments", "true"), ordered = destinationMap.getOrElse("orderedrecords", "false"), df = dft, sparkSession = sparkSession, documentfromjsonfield = destinationMap.getOrElse("documentfromjsonfield", "false"), jsonfield = destinationMap.getOrElse("jsonfield", "jsonfield"), vaultEnv = destinationMap("vaultenv"), secretStore = destinationMap.getOrElse("secretstore", "vault"), addlSparkOptions = destination.optJSONObject("sparkoptions"), maxBatchSize = destinationMap.get("maxBatchSize"))
       } else if (destinationMap("platform") == "kafka") {
-        dataframeFromTo.dataFrameToKafka(spark = sparkSession, df =dft, valueSchemaAsAvroJson = destinationMap("valueschema"), valueField= destinationMap.getOrElse("valuefield", "value"), topic= destinationMap("topic"), kafkaBroker= destinationMap("bootstrapservers"), schemaRegistryUrl=destinationMap("schemaregistries"), keyField= destinationMap.get("keyfield"), keySchemaAsAvroJson = destinationMap.get("keyschema"), addlSparkOptions = Some(destination.optJSONObject("sparkoptions")))
+        dataframeFromTo.dataFrameToKafka(spark = sparkSession, df = dft, valueSchemaAsAvroJson = destinationMap("valueschema"), valueField = destinationMap.getOrElse("valuefield", "value"), topic = destinationMap("topic"), kafkaBroker = destinationMap("bootstrapservers"), schemaRegistryUrl = destinationMap("schemaregistries"), keyField = destinationMap.get("keyfield"), keySchemaAsAvroJson = destinationMap.get("keyschema"), addlSparkOptions = Some(destination.optJSONObject("sparkoptions")))
       } else if (destinationMap("platform") == "elastic") {
         dataframeFromTo.dataFrameToElastic(destinationMap("awsenv"), destinationMap("clustername"), destinationMap("port"), destinationMap("index"), destinationMap("type"), destinationMap("version"), destinationMap("login"), destinationMap("password"), destinationMap("local_dc"), destination.optJSONObject("sparkoptions"), dft, reportRowHtml, destinationMap("vaultenv"), destinationMap.getOrElse("savemode", "index"), destinationMap.getOrElse("mappingid", null), destinationMap.getOrElse("flag", "false"), destinationMap.getOrElse("secretstore", "vault"), sparkSession)
       }
@@ -280,11 +280,11 @@ class Migration extends SparkListener {
         dataframeFromTo.dataFrameToNeo4j(dft, destinationMap("cluster"), destinationMap("login"), destinationMap.getOrElse("password", ""), destinationMap("awsenv"), destinationMap("vaultenv"), node1_label, node1_keys, node1_nonKeys, node2_label, node2_keys, node2_nonKeys, relation_label, destinationMap.getOrElse("batchsize", "10000").toInt, node1_createOrMerge, node1_createNodeKeyConstraint, node2_createOrMerge, node2_createNodeKeyConstraint, relation_createOrMerge, destinationMap.getOrElse("secretstore", "vault"), sparkSession)
       }
       else if (destinationMap("platform") == "snowflake") {
-        dataframeFromTo.dataFrameToSnowflake (
-          destinationMap("url"), 
-          destinationMap("user"), 
-          destinationMap("password"), 
-          destinationMap("database"), 
+        dataframeFromTo.dataFrameToSnowflake(
+          destinationMap("url"),
+          destinationMap("user"),
+          destinationMap("password"),
+          destinationMap("database"),
           destinationMap("schema"),
           destinationMap("table"),
           destinationMap.getOrElse("savemode", "Append"),
@@ -292,7 +292,7 @@ class Migration extends SparkListener {
           destinationMap("awsenv"),
           destinationMap("vaultenv"),
           destinationMap.getOrElse("secretstore", "vault"),
-          dft, 
+          dft,
           sparkSession
         )
       }
@@ -446,7 +446,7 @@ class Migration extends SparkListener {
     else if (platform == "hive") {
       dataframeFromTo.hiveToDataFrame(propertiesMap("url"), sparkSession, propertiesMap("dbtable"), propertiesMap.getOrElse("username", ""), propertiesMap.getOrElse("fetchsize", ""))
     } else if (platform == "mongodb") {
-      dataframeFromTo.mongodbToDataFrame(propertiesMap("awsenv"), propertiesMap("cluster"), propertiesMap.getOrElse("overrideconnector", "false"), propertiesMap("database"),  propertiesMap.get("replicaset"), propertiesMap("authenticationdatabase"), propertiesMap("collection"), propertiesMap("login"), propertiesMap("password"), sparkSession, propertiesMap("vaultenv"), platformObject.optJSONObject("sparkoptions"), propertiesMap.getOrElse("secretstore", "vault"), propertiesMap.getOrElse("authenticationenabled", "true"), propertiesMap.getOrElse("tmpfilelocation", null), propertiesMap.getOrElse("samplesize", null))
+      dataframeFromTo.mongodbToDataFrame(propertiesMap("awsenv"), propertiesMap("cluster"), propertiesMap.getOrElse("overrideconnector", "false"), propertiesMap("database"), propertiesMap.get("replicaset"), propertiesMap("authenticationdatabase"), propertiesMap("collection"), propertiesMap("login"), propertiesMap("password"), sparkSession, propertiesMap("vaultenv"), platformObject.optJSONObject("sparkoptions"), propertiesMap.getOrElse("secretstore", "vault"), propertiesMap.getOrElse("tmpfilelocation", null), propertiesMap.getOrElse("samplesize", null))
     }
     else if (platform == "kafka") {
       dataframeFromTo.kafkaToDataFrame(propertiesMap("bootstrapServers"), propertiesMap("topic"), propertiesMap("offset"), propertiesMap("schemaRegistries"), propertiesMap.getOrElse("keydeserializer", "org.apache.kafka.common.serialization.StringDeserializer"), propertiesMap("deSerializer"), propertiesMap.getOrElse("s3location", appConfig.s3bucket.toString + "/datapull-opensource/logs/"), propertiesMap.getOrElse("groupid", null), propertiesMap.getOrElse("requiredonlyvalue", "false"), propertiesMap.getOrElse("payloadcolumnname", "body"), migrationId, jobId, sparkSession, s3TempFolderDeletionError)
@@ -457,12 +457,12 @@ class Migration extends SparkListener {
     else if (platform == "influxdb") {
       dataframeFromTo.InfluxdbToDataframe(propertiesMap("awsenv"), propertiesMap("clustername"), propertiesMap("database"), propertiesMap("measurementname"), propertiesMap("login"), propertiesMap("password"), propertiesMap("vaultenv"), propertiesMap.getOrElse("secretstore", "vault"), sparkSession)
     }
-     else if (platform == "snowflake") {
+    else if (platform == "snowflake") {
       dataframeFromTo.snowflakeToDataFrame(
-        propertiesMap("url"), 
-        propertiesMap("user"), 
-        propertiesMap("password"), 
-        propertiesMap("database"), 
+        propertiesMap("url"),
+        propertiesMap("user"),
+        propertiesMap("password"),
+        propertiesMap("database"),
         propertiesMap("schema"),
         propertiesMap("table"),
         platformObject.optJSONObject("options"),
@@ -506,7 +506,7 @@ class Migration extends SparkListener {
     if (propertiesMap.getOrElse("secretstore", "").equals("aws_secrets_manager")) {
       propertiesMap = extractCredentialsFromSecretManager(propertiesMap)
     }
-    println ("Debug...")
+    println("Debug...")
     println(propertiesMap)
     var platform = propertiesMap("platform")
     var pre_migrate_commands = new JSONArray()
@@ -571,7 +571,7 @@ class Migration extends SparkListener {
           dataframeFromTo.cassandraRunCommand(propertiesMap("awsenv"), propertiesMap("cluster"), propertiesMap("keyspace"), propertiesMap("login"), propertiesMap("password"), propertiesMap("local_dc"), platformObject.optJSONObject("sparkoptions"), command.getJSONObject(i).getString("query"), reportbodyHtml, propertiesMap("vaultenv"), propertiesMap.getOrElse("secretstore", "vault"))
         } else if (platform == "mongodb") {
           propertiesMap = propertiesMap ++ deriveClusterIPFromConsul(jsonObjectPropertiesToMap(List("clustername", "cluster_key", "consul_dc"), platformObject))
-          dataframeFromTo.mongoRunCommand(propertiesMap("awsenv"), propertiesMap("cluster"), propertiesMap("database"), propertiesMap.get("replicaset"), propertiesMap("authenticationdatabase"), propertiesMap("collection"), propertiesMap("login"), propertiesMap("password"), propertiesMap("vaultenv"), platformObject.optJSONObject("sparkoptions"), command.getJSONObject(i).getString("query"), propertiesMap.getOrElse("secretstore", "vault"), propertiesMap.getOrElse("authenticationenabled", true).asInstanceOf[Boolean])
+          dataframeFromTo.mongoRunCommand(propertiesMap("awsenv"), propertiesMap("cluster"), propertiesMap("database"), propertiesMap.get("replicaset"), propertiesMap("authenticationdatabase"), propertiesMap("collection"), propertiesMap("login"), propertiesMap("password"), propertiesMap("vaultenv"), platformObject.optJSONObject("sparkoptions"), command.getJSONObject(i).getString("query"), propertiesMap.getOrElse("secretstore", "vault"))
         } else if (platform == "elastic") {
           propertiesMap = propertiesMap ++ deriveClusterIPFromConsul(jsonObjectPropertiesToMap(List("clustername", "cluster_key", "consul_dc"), platformObject))
           dataframeFromTo.elasticRunCommand(propertiesMap("awsenv"), propertiesMap("clustername"), propertiesMap("port"), propertiesMap("index"), propertiesMap("login"), propertiesMap("password"), propertiesMap("local_dc"), platformObject.optJSONObject("sparkoptions"), command.getJSONObject(i).getString("shell"), reportbodyHtml, propertiesMap("vaultenv"), propertiesMap.getOrElse("secretstore", "vault"))

@@ -830,7 +830,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
   }
 
-  def mongodbToDataFrame(awsEnv: String, cluster: String, overrideconnector: String, database: String, replicaSet: Option[String], authenticationDatabase: String, collection: String, login: String, password: String, sparkSession: org.apache.spark.sql.SparkSession, vaultEnv: String, addlSparkOptions: JSONObject, secretStore: String, authenticationEnabled: String, tmpFileLocation: String, sampleSize: String): org.apache.spark.sql.DataFrame = {
+  def mongodbToDataFrame(awsEnv: String, cluster: String, overrideconnector: String, database: String, replicaSet: Option[String], authenticationDatabase: String, collection: String, login: String, password: String, sparkSession: org.apache.spark.sql.SparkSession, vaultEnv: String, addlSparkOptions: JSONObject, secretStore: String, tmpFileLocation: String, sampleSize: String): org.apache.spark.sql.DataFrame = {
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster
     var clusterNodes = cluster
@@ -883,7 +883,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
   }
 
-  def dataFrameToMongodb(awsEnv: String, cluster: String, database: String, authenticationDatabase: String, collection: String, login: String, password: String, replicaset: String, replaceDocuments: String, ordered: String, df: org.apache.spark.sql.DataFrame, sparkSession: org.apache.spark.sql.SparkSession, documentfromjsonfield: String, jsonfield: String, vaultEnv: String, secretStore: String, addlSparkOptions: JSONObject, maxBatchSize: String, authenticationEnabled: Boolean): Unit = {
+  def dataFrameToMongodb(awsEnv: String, cluster: String, database: String, authenticationDatabase: String, collection: String, login: String, password: String, replicaset: String, replaceDocuments: String, ordered: String, df: org.apache.spark.sql.DataFrame, sparkSession: org.apache.spark.sql.SparkSession, documentfromjsonfield: String, jsonfield: String, vaultEnv: String, secretStore: String, addlSparkOptions: JSONObject, maxBatchSize: Option[String] = None): Unit = {
 
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster
@@ -895,8 +895,8 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     uri = helper.buildMongoURI(cluster = cluster, database = database, collection = if (collection == null || collection == "") None else Some(collection), login = if (login == null || login == "") None else Some(login), password = if (password == null || password == "") None else Some(password), authenticationDatabase = if (authenticationDatabase == null || authenticationDatabase == "") None else Some(authenticationDatabase), replicaSet = if (replicaset == null || replicaset == "") None else Some(replicaset), awsEnv = awsEnv, vaultEnv = vaultEnv, secretStore = secretStore)
 
     var sparkOptions = Map("uri" -> uri, "replaceDocument" -> replaceDocuments.toString, "ordered" -> ordered.toString)
-    if (maxBatchSize != null)
-      sparkOptions = sparkOptions ++ Map("maxBatchSize" -> maxBatchSize)
+    if (!maxBatchSize.isEmpty)
+      sparkOptions = sparkOptions ++ Map("maxBatchSize" -> maxBatchSize.get)
 
     if (addlSparkOptions != null) {
       sparkOptions = sparkOptions ++ jsonObjectPropertiesToMap(addlSparkOptions)
@@ -917,7 +917,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
   }
 
-  def mongoRunCommand(awsEnv: String, cluster: String, database: String, replicaSet: Option[String], authenticationDatabase: String, collection: String, login: String, password: String, vaultEnv: String, addlSparkOptions: JSONObject, runCommand: String, secretStore: String, authenticationEnabled: Boolean): Unit = {
+  def mongoRunCommand(awsEnv: String, cluster: String, database: String, replicaSet: Option[String], authenticationDatabase: String, collection: String, login: String, password: String, vaultEnv: String, addlSparkOptions: JSONObject, runCommand: String, secretStore: String): Unit = {
 
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster

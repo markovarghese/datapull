@@ -329,7 +329,9 @@
           {
             "query": "{ delete: \"datapull_test\",deletes: [ { q: { user: \"abc123\" }, limit: 1 } ] }"
           }
-        ]
+        ],
+        "comment_jksfilepath": "Optional; When targeting an SSL/TLS-secured MongoDB cluster, the JKS files that contain the server and/or client certificates should be placed in an S3 location that is accessible by the EMR profile role. This jksfilepath attribute should be specified as the S3 location of the JSK file file in the format s3://<S3 bucket and folder path>/<JKS file name>",
+        "jksfilepath": "s3://<S3 bucket and folder path>/<JKS file name>"
       },
       "destination_mongodb": {
         "platform": "mongodb",
@@ -371,7 +373,9 @@
           {
             "query": "{ delete: \"datapull_test\",deletes: [ { q: { user: \"abc123\" }, limit: 1 } ] }"
           }
-        ]
+        ],
+        "comment_jksfilepath": "Optional; When targeting an SSL/TLS-secured MongoDB cluster, the JKS files that contain the server and/or client certificates should be placed in an S3 location that is accessible by the EMR profile role. This jksfilepath attribute should be specified as the S3 location of the JSK file file in the format s3://<S3 bucket and folder path>/<JKS file name>",
+        "jksfilepath": "s3://<S3 bucket and folder path>/<JKS file name>"
       },
       "destination_cloudwatch": {
         "platform": "cloudwatch",

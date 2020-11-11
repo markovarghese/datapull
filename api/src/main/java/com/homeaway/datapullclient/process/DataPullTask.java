@@ -134,6 +134,8 @@ public class DataPullTask implements Runnable {
 
         HadoopJarStepConfig runExampleConfig= null;
 
+        List<String> bootStrapFiles =new ArrayList()
+
         if(sparkSubmitParams !=null && !sparkSubmitParams.isEmpty()){
             runExampleConfig = new HadoopJarStepConfig()
                     .withJar("command-runner.jar")
