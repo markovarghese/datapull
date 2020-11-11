@@ -217,6 +217,10 @@ class Helper(appConfig: AppConfig) {
 
     "mongodb://" + (if (authenticationEnabled) URLEncoder.encode(vaultLogin.get, "UTF-8") + ":" + URLEncoder.encode(vaultPassword.get, "UTF-8") + "@" else "") + cluster + ":" + port.toString + "/" + database + (if (collection.isEmpty) "" else "." + collection) + "?ssl=" + ssl.toString + (if (authenticationEnabled) "&authSource=" + authenticationDatabase.getOrElse("admin")) + (if (replicaSet.isEmpty) "" else "&replicaSet=" + replicaSet.get)
   }
+
+  def buildTeradataURI(server: String, database: String, port: Option[Int]): String = {
+    "jdbc:teradata://" + server + "/TYPE=RAW,DATABASE=" + database + ",TMODE=TERA,DBS_PORT=" + port.getOrElse(1025).toString
+  }
 }
 
 case class HttpResponse(ResponseCode: Int, ResponseBody: String)
