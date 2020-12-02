@@ -112,7 +112,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
         format("com.springml.spark.sftp").
         option("host", host).
         option("username", login).
-        option( if (pemFilePath == "")  "password" else "pem", if (pemFilePath == "")  password else pemFilePath).
+        option(if (pemFilePath == "") "password" else "pem", if (pemFilePath == "") password else pemFilePath).
         option("fileType", fileFormat).
         load(filePath))
 
@@ -271,7 +271,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
         format("com.springml.spark.sftp").
         option("host", host).
         option("username", login).
-        option( if (pemFilePath == "")  "password" else "pem", if (pemFilePath == "")  password else pemFilePath).
+        option(if (pemFilePath == "") "password" else "pem", if (pemFilePath == "") password else pemFilePath).
         option("fileType", fileFormat).
         save(filePath)
 
@@ -831,7 +831,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
   }
 
-  def mongodbToDataFrame(awsEnv: String, cluster: String, overrideconnector: String, database: String, authenticationDatabase: String, collection: String, login: String, password: String, sparkSession: org.apache.spark.sql.SparkSession, vaultEnv: String, addlSparkOptions: JSONObject, secretStore: String, authenticationEnabled: String, tmpFileLocation: String, sampleSize: String): org.apache.spark.sql.DataFrame = {
+  def mongodbToDataFrame(awsEnv: String, cluster: String, overrideConnector: Boolean, database: String, authenticationDatabase: Option[String], collection: String, login: Option[String], password: Option[String], replicaSet: Option[String], sparkSession: org.apache.spark.sql.SparkSession, vaultEnv: String, addlSparkOptions: JSONObject, secretStore: String, tmpFileLocation: String, sampleSize: Option[Long], sslEnabled: Boolean): org.apache.spark.sql.DataFrame = {
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster
     var clusterNodes = cluster
@@ -839,23 +839,22 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       clusterName = consul.serviceName
       clusterNodes = clusterNodes + "," + consul.ipAddresses.mkString(",") + ":27017"
     }
-    var uri: String = null
-    var vaultLogin: String = null
-    var vaultPassword: String = null
+    var vaultLogin: Option[String] = None
+    var vaultPassword: Option[String] = None
     sparkSession.sparkContext.hadoopConfiguration.set("spark.shuffle.service.enabled", "true")
     //if password isn't set, attempt to get from security.Vault
-    if (authenticationEnabled.toBoolean) {
+    if (!login.isEmpty) {
       vaultPassword = password
       vaultLogin = login
-      if (vaultPassword == "") {
+      if (vaultPassword.isEmpty) {
         val secretService = new SecretService(secretStore, appConfig)
-        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login, vaultEnv)
-        vaultLogin = vaultCreds("username")
-        vaultPassword = vaultCreds("password")
+        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login.get, vaultEnv)
+        vaultLogin = vaultCreds.get("username")
+        vaultPassword = vaultCreds.get("password")
       }
     }
-    uri = helper.buildMongoURI(vaultLogin, vaultPassword, cluster, null, authenticationDatabase, database, collection, authenticationEnabled.toBoolean)
-    if (overrideconnector.toBoolean) {
+    val uri = helper.buildMongoURI(login = vaultLogin, password = vaultPassword, replicaSet = replicaSet, cluster = cluster, authenticationDatabase = authenticationDatabase, database = database, collection = collection, sslEnabled = sslEnabled)
+    if (overrideConnector) {
       var mongoClient: MongoClient = new MongoClient(new MongoClientURI(uri))
       var mdatabase: MongoDatabase = mongoClient.getDatabase("" + database);
       var col: MongoCollection[Document] = mdatabase.getCollection(collection);
@@ -887,47 +886,48 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       if (addlSparkOptions != null) {
         sparkOptions = sparkOptions ++ jsonObjectPropertiesToMap(addlSparkOptions)
       }
-      if (sampleSize != null) {
-        sparkOptions = sparkOptions ++ Map("spark.mongodb.input.sample.sampleSize" -> sampleSize, "sampleSize" -> sampleSize)
+      if (!sampleSize.isEmpty) {
+        sparkOptions = sparkOptions ++ Map("spark.mongodb.input.sample.sampleSize" -> sampleSize.get.toString, "sampleSize" -> sampleSize.get.toString)
       }
       val df = sparkSession.loadFromMongoDB(ReadConfig(sparkOptions))
       return df
     }
   }
 
-  def dataFrameToMongodb(awsEnv: String, cluster: String, database: String, authenticationDatabase: String, collection: String, login: String, password: String, replicaset: String, replaceDocuments: String, ordered: String, df: org.apache.spark.sql.DataFrame, sparkSession: org.apache.spark.sql.SparkSession, documentfromjsonfield: String, jsonfield: String, vaultEnv: String, secretStore: String, addlSparkOptions: JSONObject, maxBatchSize: String, authenticationEnabled: Boolean): Unit = {
+  def dataFrameToMongodb(awsEnv: String, cluster: String, database: String, authenticationDatabase: Option[String], collection: String, login: Option[String], password: Option[String], replicaSet: Option[String], replaceDocuments: Boolean, ordered: Boolean, df: org.apache.spark.sql.DataFrame, sparkSession: org.apache.spark.sql.SparkSession, documentfromjsonfield: Boolean, jsonfield: String, vaultEnv: String, secretStore: String, addlSparkOptions: JSONObject, maxBatchSize: Option[Long], sslEnabled: Boolean): Unit = {
 
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster
     if (consul.IsConsulDNSName()) {
       clusterName = consul.serviceName
     }
-    var uri: String = null
-    var vaultLogin: String = null
-    var vaultPassword: String = null
+
+    var vaultLogin: Option[String] = None
+    var vaultPassword: Option[String] = None
+    sparkSession.sparkContext.hadoopConfiguration.set("spark.shuffle.service.enabled", "true")
     //if password isn't set, attempt to get from security.Vault
-    if (authenticationEnabled) {
+    if (!login.isEmpty) {
       vaultPassword = password
       vaultLogin = login
-      if (vaultPassword == "") {
+      if (vaultPassword.isEmpty) {
         val secretService = new SecretService(secretStore, appConfig)
-        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login, vaultEnv)
-        vaultLogin = vaultCreds("username")
-        vaultPassword = vaultCreds("password")
+        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login.get, vaultEnv)
+        vaultLogin = vaultCreds.get("username")
+        vaultPassword = vaultCreds.get("password")
       }
     }
-    uri = helper.buildMongoURI(vaultLogin, vaultPassword, cluster, replicaset, authenticationDatabase, database, collection, authenticationEnabled)
+    val uri = helper.buildMongoURI(login = vaultLogin, password = vaultPassword, cluster = cluster, replicaSet = replicaSet, authenticationDatabase = authenticationDatabase, database = database, collection = collection, sslEnabled = sslEnabled)
 
     var sparkOptions = Map("uri" -> uri, "replaceDocument" -> replaceDocuments.toString, "ordered" -> ordered.toString)
-    if (maxBatchSize != null)
-      sparkOptions = sparkOptions ++ Map("maxBatchSize" -> maxBatchSize)
+    if (!maxBatchSize.isEmpty)
+      sparkOptions = sparkOptions ++ Map("maxBatchSize" -> maxBatchSize.get.toString)
 
     if (addlSparkOptions != null) {
       sparkOptions = sparkOptions ++ jsonObjectPropertiesToMap(addlSparkOptions)
     }
 
     val writeConfig = WriteConfig(sparkOptions)
-    if (documentfromjsonfield.toBoolean) {
+    if (documentfromjsonfield) {
 
       import com.mongodb.spark._
       import org.bson.Document
@@ -941,7 +941,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
   }
 
-  def mongoRunCommand(awsEnv: String, cluster: String, database: String, authenticationDatabase: String, collection: String, login: String, password: String, vaultEnv: String, addlSparkOptions: JSONObject, runCommand: String, secretStore: String, authenticationEnabled: Boolean): Unit = {
+  def mongoRunCommand(awsEnv: String, cluster: String, database: String, authenticationDatabase: Option[String], collection: String, login: Option[String], password: Option[String], vaultEnv: String, addlSparkOptions: JSONObject, runCommand: String, secretStore: String, sslEnabled: Boolean): Unit = {
 
     val consul = new Consul(cluster, appConfig)
     var clusterName = cluster
@@ -950,22 +950,21 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       clusterName = consul.serviceName
       clusterNodes = clusterNodes + "," + consul.ipAddresses.mkString(",")
     }
-    var uri: MongoClientURI = null
+
+    var vaultLogin: Option[String] = None
+    var vaultPassword: Option[String] = None
     //if password isn't set, attempt to get from security.Vault
-    var vaultLogin: String = null
-    var vaultPassword: String = null
-    //if password isn't set, attempt to get from security.Vault
-    if (authenticationEnabled) {
+    if (!login.isEmpty) {
       vaultPassword = password
       vaultLogin = login
-      if (vaultPassword == "") {
+      if (vaultPassword.isEmpty) {
         val secretService = new SecretService(secretStore, appConfig)
-        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login, vaultEnv)
-        vaultLogin = vaultCreds("username")
-        vaultPassword = vaultCreds("password")
+        val vaultCreds = secretService.getSecret(awsEnv, clusterName, login.get, vaultEnv)
+        vaultLogin = vaultCreds.get("username")
+        vaultPassword = vaultCreds.get("password")
       }
     }
-    uri = helper.buildMongoURI(vaultLogin, vaultPassword, cluster, null, authenticationDatabase, database, collection, authenticationEnabled).asInstanceOf[MongoClientURI]
+    val uri = helper.buildMongoURI(login = vaultLogin, password = vaultPassword, cluster = cluster, authenticationDatabase = authenticationDatabase, database = database, collection = collection, sslEnabled = sslEnabled).asInstanceOf[MongoClientURI]
     val mongoClient = new MongoClient(uri)
     val data = mongoClient.getDatabase(database)
     val response = data.runCommand(org.bson.Document.parse(runCommand))
@@ -1464,23 +1463,23 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     })
   }
 
-  def snowflakeToDataFrame (
-    sfUrl: String,
-    sfUser: String, 
-    sfPassword: String,
-    sfDatabase: String, 
-    sfSchema: String,
-    tableOrQuery: String,
-    options: JSONObject,
-    awsEnv: String, 
-    vaultEnv: String, 
-    secretStore: String, 
-    sparkSession: org.apache.spark.sql.SparkSession): org.apache.spark.sql.DataFrame = {
+  def snowflakeToDataFrame(
+                            sfUrl: String,
+                            sfUser: String,
+                            sfPassword: String,
+                            sfDatabase: String,
+                            sfSchema: String,
+                            tableOrQuery: String,
+                            options: JSONObject,
+                            awsEnv: String,
+                            vaultEnv: String,
+                            secretStore: String,
+                            sparkSession: org.apache.spark.sql.SparkSession): org.apache.spark.sql.DataFrame = {
     //if password isn't set, attempt to get from security.Vault
     var vaultPassword = sfPassword
     var vaultLogin = sfUser
     if (vaultPassword == "") {
-      val clusterName= sfUrl + "/" + sfDatabase + "/" + sfSchema
+      val clusterName = sfUrl + "/" + sfDatabase + "/" + sfSchema
       val secretService = new SecretService(secretStore, appConfig)
       val vaultCreds = secretService.getSecret(awsEnv, clusterName, vaultLogin, vaultEnv)
       vaultLogin = vaultCreds("username")
@@ -1491,8 +1490,8 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       "sfUrl" -> sfUrl,
       "sfUser" -> vaultLogin,
       "sfPassword" -> vaultPassword,
-      "sfDatabase" -> sfDatabase, 
-      "sfSchema" ->  sfSchema
+      "sfDatabase" -> sfDatabase,
+      "sfSchema" -> sfSchema
     )
 
     if (options != null) {
@@ -1508,26 +1507,27 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
 
     df
   }
+
   def dataFrameToSnowflake(
-    sfUrl: String,
-    sfUser: String, 
-    sfPassword: String,
-    sfDatabase: String, 
-    sfSchema: String,
-    table: String,
-    saveMode: String,
-    options: JSONObject,
-    awsEnv: String, 
-    vaultEnv: String, 
-    secretStore: String, 
-    df: org.apache.spark.sql.DataFrame, 
-    sparkSession: org.apache.spark.sql.SparkSession
-  ): Unit = {
+                            sfUrl: String,
+                            sfUser: String,
+                            sfPassword: String,
+                            sfDatabase: String,
+                            sfSchema: String,
+                            table: String,
+                            saveMode: String,
+                            options: JSONObject,
+                            awsEnv: String,
+                            vaultEnv: String,
+                            secretStore: String,
+                            df: org.apache.spark.sql.DataFrame,
+                            sparkSession: org.apache.spark.sql.SparkSession
+                          ): Unit = {
     //if password isn't set, attempt to get from security.Vault
     var vaultPassword = sfPassword
     var vaultLogin = sfUser
     if (vaultPassword == "") {
-      val clusterName= sfUrl + "/" + sfDatabase + "/" + sfSchema
+      val clusterName = sfUrl + "/" + sfDatabase + "/" + sfSchema
       val secretService = new SecretService(secretStore, appConfig)
       val vaultCreds = secretService.getSecret(awsEnv, clusterName, vaultLogin, vaultEnv)
       vaultLogin = vaultCreds("username")
@@ -1538,8 +1538,8 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       "sfUrl" -> sfUrl,
       "sfUser" -> vaultLogin,
       "sfPassword" -> vaultPassword,
-      "sfDatabase" -> sfDatabase, 
-      "sfSchema" ->  sfSchema
+      "sfDatabase" -> sfDatabase,
+      "sfSchema" -> sfSchema
     )
 
     if (options != null) {
@@ -1547,11 +1547,11 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
 
     df.write
-    .format(SNOWFLAKE_SOURCE_NAME)
-    .options(sfOptions)
-    .option("dbtable", table)
-    .mode(SaveMode.valueOf(saveMode))
-    .save()
+      .format(SNOWFLAKE_SOURCE_NAME)
+      .options(sfOptions)
+      .option("dbtable", table)
+      .mode(SaveMode.valueOf(saveMode))
+      .save()
 
   }
 }

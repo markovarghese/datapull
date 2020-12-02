@@ -263,11 +263,11 @@ class Helper(appConfig: AppConfig) {
     toAvroConfig
   }
 
-  def buildMongoURI(login: String, password: String, cluster: String, replicaSet: String, autheticationDatabase: String, database: String, collection: String, authenticationEnabled: Boolean): String = {
-    if (authenticationEnabled) {
-      "mongodb://" + URLEncoder.encode(login, "UTF-8") + ":" + URLEncoder.encode(password, "UTF-8") + "@" + cluster + ":27017/" + database + "." + collection + "?authSource=" + (if (autheticationDatabase != "") autheticationDatabase else "admin") + (if (replicaSet == null) "" else "&replicaSet=" + replicaSet)
+  def buildMongoURI(login: Option[String]= None, password: Option[String]= None, cluster: String, replicaSet: Option[String]= None, authenticationDatabase: Option[String] = None, database: String, collection: String, sslEnabled: Boolean = false): String = {
+    if (!login.isEmpty && !password.isEmpty) {
+      "mongodb://" + URLEncoder.encode(login.get, "UTF-8") + ":" + URLEncoder.encode(password.get, "UTF-8") + "@" + cluster + ":27017/" + database + "." + collection + "?authSource=" + authenticationDatabase.getOrElse("admin") + (if (replicaSet.isEmpty) "" else "&replicaSet=" + replicaSet.get) + (if (sslEnabled) "&ssl=true&tlsAllowInvalidHostnames=true" else "")
     } else {
-      "mongodb://" + cluster + ":27017/" + database + "." + collection + (if (replicaSet == null) "" else "&replicaSet=" + replicaSet)
+      "mongodb://" + cluster + ":27017/" + database + "." + collection + (if (replicaSet.isEmpty) "" else "?replicaSet=" + replicaSet.get)
     }
   }
 
