@@ -13,7 +13,7 @@
         <spark.version>3.0.0</spark.version>
         <spark.minor.version>3.0</spark.minor.version>
         <maven.plugin.version>3.2.0</maven.plugin.version>
-        <hadoop.version>2.10.0</hadoop.version>
+        <hadoop.version>3.2.1</hadoop.version>
     </properties>
 
     <dependencyManagement>
