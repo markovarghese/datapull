@@ -52,7 +52,7 @@ import org.apache.spark.sql.jdbc.JdbcDialects
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.bson.Document
 import org.codehaus.jettison.json.JSONObject
-import org.elasticsearch.spark.sql._
+// import org.elasticsearch.spark.sql._
 import org.influxdb.InfluxDBFactory
 import org.influxdb.dto.Query
 import security._
@@ -633,7 +633,8 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       config = config ++ Map("es.mapping.id" -> mappingId)
 
     if (flag == "false") {
-      df.saveToEs(config)
+      /// TODO: uncomment this when ES support is rewritten for Spark 3.0
+      // df.saveToEs(config)
     }
 
   }
