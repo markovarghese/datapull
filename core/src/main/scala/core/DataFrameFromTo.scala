@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util
 import java.util.{Calendar, Properties, UUID}
+
 import com.amazonaws.services.logs.model.{DescribeLogStreamsRequest, InputLogEvent, PutLogEventsRequest}
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
@@ -30,13 +31,14 @@ import com.datastax.driver.core.exceptions.TruncateException
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.mongodb.client.{MongoCollection, MongoCursor, MongoDatabase}
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.{ReadConfig, WriteConfig}
 import com.mongodb.spark.sql.toSparkSessionFunctions
+import com.mongodb.{MongoClient, MongoClientURI}
 import config.AppConfig
 import core.DataPull.jsonObjectPropertiesToMap
 import helper._
-
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import javax.mail.{Message, Session, Transport}
 import net.snowflake.spark.snowflake.Utils.SNOWFLAKE_SOURCE_NAME
@@ -50,7 +52,6 @@ import org.apache.spark.sql.jdbc.JdbcDialects
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.bson.Document
 import org.codehaus.jettison.json.JSONObject
-import org.mongodb.scala.{FindObservable, MongoClient, MongoCollection, MongoDatabase}
 // import org.elasticsearch.spark.sql._
 import org.influxdb.InfluxDBFactory
 import org.influxdb.dto.Query
@@ -855,10 +856,10 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
     }
     uri = helper.buildMongoURI(vaultLogin, vaultPassword, cluster, null, authenticationDatabase, database, collection, authenticationEnabled.toBoolean, sslEnabled)
     if (overrideconnector.toBoolean) {
-      var mongoClient: MongoClient =  MongoClient(uri)
+      var mongoClient: MongoClient = new MongoClient(new MongoClientURI(uri))
       var mdatabase: MongoDatabase = mongoClient.getDatabase("" + database);
       var col: MongoCollection[Document] = mdatabase.getCollection(collection);
-      var cur: FindObservable [Document] = col.find()
+      var cur: MongoCursor[Document] = col.find().iterator()
       var doc: org.bson.Document = null
       val list = new ListBuffer[String]()
       val tmp_location = tmpFileLocation
@@ -866,12 +867,15 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       var df_big = sparkSession.emptyDataFrame
 
       import sparkSession.implicits._
-      cur.subscribe((doc: Document) => {list += (doc.toJson)
-      if (list.length >= 20000) {
-        df_temp = list.toList.toDF("jsonfield")
-        df_temp.write.mode(SaveMode.Append).json(tmp_location)
-        list.clear()
-      }})
+      while (cur.hasNext()) {
+        doc = cur.next();
+        list += (doc.toJson)
+        if (list.length >= 20000) {
+          df_temp = list.toList.toDF("jsonfield")
+          df_temp.write.mode(SaveMode.Append).json(tmp_location)
+          list.clear()
+        }
+      }
       df_temp = list.toList.toDF("jsonfield")
       df_temp.write.mode(SaveMode.Append).json(tmp_location)
       list.clear()
@@ -962,11 +966,9 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       }
     }
 
-    val uriString= helper.buildMongoURI(vaultLogin, vaultPassword, cluster, null, authenticationDatabase, database, collection, authenticationEnabled, sslEnabled)
 
-    System.setProperty("org.mongodb.async.type", "netty")
-    //val uri = new MongoClientURI(uriString)
-    val mongoClient = org.mongodb.scala.MongoClient(uriString)
+    val uri = new MongoClientURI(helper.buildMongoURI(vaultLogin, vaultPassword, cluster, null, authenticationDatabase, database, collection, authenticationEnabled, sslEnabled))
+    val mongoClient = new MongoClient(uri)
     val data = mongoClient.getDatabase(database)
 
     val response = data.runCommand(org.bson.Document.parse(runCommand))

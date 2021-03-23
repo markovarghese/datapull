@@ -18,19 +18,9 @@
         "cluster": "mongoserver",
         "authenticationdatabase": "admin",
         "database": "testdb",
-        "collection": "testcollection5",
+        "collection": "testcollection",
         "login": "mongoadmin",
-        "password": "secret",
-        "pre_migrate_commands": [
-          {
-            "query": "{ drop: \"testcollection4\" }"
-          }
-        ],
-        "post_migrate_commands": [
-          {
-            "query": "{ renameCollection: \"testcollection5\",\n  to: \"testcollection7\" }"
-          }
-        ]
+        "password": "secret"
       }
     }
   ],

@@ -222,7 +222,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!--<MONGODB SPARK CONNECTOR 2.4.6 does not exist>-->
         <dependency>
             <groupId>org.mongodb.spark</groupId>
             <artifactId>mongo-spark-connector_${scala.binary.version}</artifactId>
@@ -328,35 +327,12 @@
             <version>3.1</version>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>org.mongodb.scala</groupId>
-            <artifactId>mongo-scala-bson_${scala.binary.version}</artifactId>
-            <version>4.0.5</version>
-        </dependency>
-        -->
-
-        <!-- https://mvnrepository.com/artifact/org.mongodb/bson -->
-        <!--
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>bson</artifactId>
-            <version>3.8.2</version>
+            <artifactId>mongodb-driver-legacy</artifactId>
+            <version>4.2.2</version>
         </dependency>
-         -->
 
-        <dependency>
-            <groupId>org.mongodb.scala</groupId>
-            <artifactId>mongo-scala-driver_${scala.binary.version}</artifactId>
-            <version>4.1.1</version>
-        </dependency>
-        <!--
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.12.8</version>
-        </dependency>
-        -->
 <!--
         <dependency>
             <groupId>com.springml</groupId>
