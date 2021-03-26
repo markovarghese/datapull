@@ -107,13 +107,18 @@
         <dependency>
             <groupId>com.datastax.spark</groupId>
             <artifactId>spark-cassandra-connector_${scala.binary.version}</artifactId>
-            <version>2.4.3</version>
+            <version>3.0.0</version>
             <exclusions>
                 <exclusion>  <!-- declare the exclusion here -->
                     <groupId>io.netty</groupId>
                     <artifactId>netty-all</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jnr</groupId>
+            <artifactId>jnr-posix</artifactId>
+            <version>3.1.4</version>
         </dependency>
 
         <!--<FOR SQL SERVER JDBC CONNECTION>-->
@@ -295,11 +300,6 @@
             <version>2.1.0-M4</version>
         </dependency>
         <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-client</artifactId>
             <version>6.3.0</version>
@@ -329,8 +329,8 @@
 
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-legacy</artifactId>
-            <version>4.2.2</version>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.12.8</version>
         </dependency>
 
 <!--

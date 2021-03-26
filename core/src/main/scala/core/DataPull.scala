@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 import java.time._
 import java.util.{Scanner, UUID}
 
-import com.datastax.driver.core.utils.UUIDs
+// import com.datastax.driver.core.utils.UUIDs
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.mongodb.spark.sql.fieldTypes.Binary
@@ -140,7 +140,6 @@ object DataPull {
     sparkSession.udf.register("validateUUID", validateUUID _)
     sparkSession.udf.register("uuidToBinary", uuidToBinary _)
     sparkSession.udf.register("binaryToUUID", binaryToUUID _)
-    sparkSession.udf.register("uuid", uuid _)
     sparkSession.udf.register("binaryToJUUID", binaryToJUUID _)
 
     stepSubmissionTime = Instant.now().toString
@@ -311,12 +310,6 @@ object DataPull {
       returnList = returnList :+ jsonArray.get(i).toString()
     }
     returnList
-  }
-
-  def uuid(): String = {
-
-    UUIDs.timeBased().toString
-
   }
 
   def validateUUID(uuidString: String): Boolean = {

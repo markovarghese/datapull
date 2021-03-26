@@ -23,11 +23,10 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util
 import java.util.{Calendar, Properties, UUID}
-
 import com.amazonaws.services.logs.model.{DescribeLogStreamsRequest, InputLogEvent, PutLogEventsRequest}
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
-import com.datastax.driver.core.exceptions.TruncateException
+import com.datastax.oss.driver.api.core.servererrors.TruncateException
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -766,6 +765,7 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
         val cConnect = CassandraConnector(conf)
         cConnect.withSessionDo(session => session.execute(cql_command))
       } catch {
+            //TODO: this logic is incorrect
         case e: TruncateException =>
           val sw = new StringWriter
           e.printStackTrace()
@@ -918,7 +918,6 @@ class DataFrameFromTo(appConfig: AppConfig, pipeline: String) extends Serializab
       }
     }
     uri = helper.buildMongoURI(vaultLogin, vaultPassword, cluster, replicaset, authenticationDatabase, database, collection, authenticationEnabled, sslEnabled)
-
     var sparkOptions = Map("uri" -> uri, "replaceDocument" -> replaceDocuments.toString, "ordered" -> ordered.toString)
     if (maxBatchSize != null)
       sparkOptions = sparkOptions ++ Map("maxBatchSize" -> maxBatchSize)

@@ -328,6 +328,8 @@
         "tmpfilelocation": "S3_LOCATION_OR_ANY_RANDOM_DIRECTORY",
         "comment_samplesize": "Optional, this is to set sampling of the mongo driver to fetch the schema for a collection.The default value for this 1000. this can be used if we have varying schemas but not varying data types for a single field",
         "samplesize": "1000",
+        "comment_sslenabled": "Set this to true, and send in the client/intermediate certs via jks files; to connect to SSL-enabled Mongodb clusters",
+        "sslenabled": false,
         "comment_sparkoptions": "Optional, this is to enable users to use mongo specific configurations. all options can be found at the official spark mongo documentation: https://docs.mongodb.com/spark-connector/master/configuration/",
         "sparkoptions": {
           "replaceDocument": true,
@@ -364,6 +366,8 @@
         "jsonfield": "jsonfield",
         "comment_replacedocuments": "Optional, this is true by default",
         "replacedocuments": true,
+        "comment_sslenabled": "Set this to true, and send in the client/intermediate certs via jks files; to connect to SSL-enabled Mongodb clusters",
+        "sslenabled": false,
         "comment_sparkoptions": "Optional, this is to enable users to use mongo specific configurations. all options can be found at the official spark mongo documentation: https://docs.mongodb.com/spark-connector/master/configuration/",
         "sparkoptions": {
           "replaceDocument": true,

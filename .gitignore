@@ -49,3 +49,5 @@ api/m2/*
 api/src/main/resources/application.yml
 core/src/main/resources/application.yml
 core/*/datapull-opensource/logs/*
+/manual-tests/filesystem_dataset_with_uuids_to_mongodb/mongodb_server/log/
+/manual-tests/filesystem_dataset_with_uuids_to_mongodb/mongodb_server/mongo_cluster/

@@ -268,7 +268,7 @@ class Helper(appConfig: AppConfig) {
     if (authenticationEnabled) {
       "mongodb://" + URLEncoder.encode(login, "UTF-8") + ":" + URLEncoder.encode(password, "UTF-8") + "@" + cluster + ":27017/" + database + "." + collection + "?authSource=" + (if (autheticationDatabase != "") autheticationDatabase else "admin") + (if (replicaSet == null) "" else "&replicaSet=" + replicaSet) + (if (sslEnabled == "true") "&ssl=true&sslInvalidHostNameAllowed=true" else "")
     } else {
-      "mongodb://" + cluster + ":27017/" + database + "." + collection + (if (replicaSet == null) "" else "&replicaSet=" + replicaSet)
+      "mongodb://" + cluster + ":27017/" + database + "." + collection + (if (replicaSet == null) "" else "?replicaSet=" + replicaSet) + (if (sslEnabled == "true") ((if (replicaSet == null) "?" else "&") + "ssl=true&sslInvalidHostNameAllowed=true") else "")
     }
   }
 
